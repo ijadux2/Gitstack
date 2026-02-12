@@ -9,6 +9,10 @@ A full-stack web application that replicates essential features of GitHub, allow
 
 ---
 
+## in work
+
+if something would not work sorry for that , **working**
+
 ## ⚠️ CRITICAL: Security Notice for Contributors
 
 **NEVER commit your `.env` file to GitHub!** The `.env` file contains sensitive credentials (GitHub OAuth secrets, database passwords) that should remain private.
@@ -25,29 +29,34 @@ A full-stack web application that replicates essential features of GitHub, allow
 ## Features
 
 ### User Authentication
+
 - GitHub OAuth integration for secure authentication
 - Session persistence using cookies
 - User profile management
 
 ### Repository Management
+
 - View, create, update, and delete repositories
 - Browse repository contents and file structures
 - View commits, branches, and contributors
 - Star/unstar repositories
 
 ### Issue Tracking
+
 - Create, update, and close issues
 - Add labels and assignees to issues
 - Comment on issues
 - Filter issues by state (open/closed)
 
 ### Pull Requests
+
 - Create and manage pull requests
 - View code diffs
 - Request reviews and add comments
 - Merge pull requests
 
 ### Collaboration
+
 - User search functionality
 - Organization management
 - Activity tracking
@@ -55,6 +64,7 @@ A full-stack web application that replicates essential features of GitHub, allow
 ## Technology Stack
 
 ### Backend
+
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
 - **MongoDB** - Database for user data and sessions
@@ -64,12 +74,14 @@ A full-stack web application that replicates essential features of GitHub, allow
 - **Axios** - HTTP client for GitHub API
 
 ### Frontend
+
 - **HTML5** - Structure
 - **CSS3** - Styling (custom CSS, no frameworks)
 - **Vanilla JavaScript** - Interactivity (ES6+)
 - **Font Awesome** - Icons
 
 ### Security
+
 - Helmet.js - Security headers
 - Express-rate-limit - Rate limiting
 - CORS - Cross-origin resource sharing
@@ -145,6 +157,7 @@ npm install
 **SECURITY WARNING**: The `.env` file contains sensitive credentials and should NEVER be committed to version control. It is already in `.gitignore` - do not remove it!
 
 1. Copy the example environment file:
+
    ```bash
    cp .env.example .env
    ```
@@ -207,11 +220,13 @@ sudo systemctl start mongod
 ### 6. Run the Application
 
 Development mode (with auto-reload):
+
 ```bash
 npm run dev
 ```
 
 Production mode:
+
 ```bash
 npm start
 ```
@@ -219,6 +234,7 @@ npm start
 ### 7. Access the Application
 
 Open your browser and navigate to:
+
 ```
 http://localhost:3000
 ```
@@ -227,45 +243,45 @@ http://localhost:3000
 
 ### Authentication Routes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/auth/github` | Initiate GitHub OAuth login |
-| GET | `/api/auth/github/callback` | GitHub OAuth callback |
-| GET | `/api/auth/me` | Get current user info |
-| GET | `/api/auth/logout` | Logout user |
+| Method | Endpoint                    | Description                 |
+| ------ | --------------------------- | --------------------------- |
+| GET    | `/api/auth/github`          | Initiate GitHub OAuth login |
+| GET    | `/api/auth/github/callback` | GitHub OAuth callback       |
+| GET    | `/api/auth/me`              | Get current user info       |
+| GET    | `/api/auth/logout`          | Logout user                 |
 
 ### Repository Routes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/repos` | List user's repositories |
-| GET | `/api/repos/:owner/:repo` | Get repository details |
-| POST | `/api/repos` | Create a new repository |
-| PATCH | `/api/repos/:owner/:repo` | Update repository |
-| DELETE | `/api/repos/:owner/:repo` | Delete repository |
-| GET | `/api/repos/:owner/:repo/contents/*` | Get repository contents |
-| GET | `/api/repos/:owner/:repo/branches` | List branches |
-| GET | `/api/repos/:owner/:repo/commits` | List commits |
+| Method | Endpoint                             | Description              |
+| ------ | ------------------------------------ | ------------------------ |
+| GET    | `/api/repos`                         | List user's repositories |
+| GET    | `/api/repos/:owner/:repo`            | Get repository details   |
+| POST   | `/api/repos`                         | Create a new repository  |
+| PATCH  | `/api/repos/:owner/:repo`            | Update repository        |
+| DELETE | `/api/repos/:owner/:repo`            | Delete repository        |
+| GET    | `/api/repos/:owner/:repo/contents/*` | Get repository contents  |
+| GET    | `/api/repos/:owner/:repo/branches`   | List branches            |
+| GET    | `/api/repos/:owner/:repo/commits`    | List commits             |
 
 ### Issue Routes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/issues/:owner/:repo` | List issues |
-| GET | `/api/issues/:owner/:repo/:issue_number` | Get issue details |
-| POST | `/api/issues/:owner/:repo` | Create issue |
-| PATCH | `/api/issues/:owner/:repo/:issue_number` | Update issue |
-| POST | `/api/issues/:owner/:repo/:issue_number/comments` | Add comment |
+| Method | Endpoint                                          | Description       |
+| ------ | ------------------------------------------------- | ----------------- |
+| GET    | `/api/issues/:owner/:repo`                        | List issues       |
+| GET    | `/api/issues/:owner/:repo/:issue_number`          | Get issue details |
+| POST   | `/api/issues/:owner/:repo`                        | Create issue      |
+| PATCH  | `/api/issues/:owner/:repo/:issue_number`          | Update issue      |
+| POST   | `/api/issues/:owner/:repo/:issue_number/comments` | Add comment       |
 
 ### Pull Request Routes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/pulls/:owner/:repo` | List pull requests |
-| POST | `/api/pulls/:owner/:repo` | Create pull request |
-| GET | `/api/pulls/:owner/:repo/:pull_number` | Get PR details |
-| PATCH | `/api/pulls/:owner/:repo/:pull_number` | Update PR |
-| PUT | `/api/pulls/:owner/:repo/:pull_number/merge` | Merge PR |
+| Method | Endpoint                                     | Description         |
+| ------ | -------------------------------------------- | ------------------- |
+| GET    | `/api/pulls/:owner/:repo`                    | List pull requests  |
+| POST   | `/api/pulls/:owner/:repo`                    | Create pull request |
+| GET    | `/api/pulls/:owner/:repo/:pull_number`       | Get PR details      |
+| PATCH  | `/api/pulls/:owner/:repo/:pull_number`       | Update PR           |
+| PUT    | `/api/pulls/:owner/:repo/:pull_number/merge` | Merge PR            |
 
 ## Usage Guide
 
@@ -307,10 +323,10 @@ http://localhost:3000
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `/` | Focus search bar |
-| `ESC` | Close modals |
+| Shortcut | Action           |
+| -------- | ---------------- |
+| `/`      | Focus search bar |
+| `ESC`    | Close modals     |
 
 ## Security Considerations
 
@@ -344,7 +360,7 @@ http://localhost:3000
 ### What to do if secrets are exposed:
 
 1. **Immediately revoke the exposed credentials** in GitHub Developer Settings
-2. **Generate new OAuth credentials** 
+2. **Generate new OAuth credentials**
 3. **Update your `.env` file** with new secrets
 4. **Rotate session secrets** if `SESSION_SECRET` was exposed
 5. **Check GitHub Security** for any unauthorized access
@@ -356,11 +372,13 @@ http://localhost:3000
 **⚠️ IMPORTANT: Never commit your `.env` file to Heroku!** Use environment variables instead:
 
 1. Create a Heroku app:
+
    ```bash
    heroku create your-gitstack-app
    ```
 
 2. Set environment variables (DO NOT add these to git):
+
    ```bash
    heroku config:set NODE_ENV=production
    heroku config:set SESSION_SECRET=your-secret-key
@@ -379,11 +397,13 @@ http://localhost:3000
 ### Deploying to Vercel
 
 1. Install Vercel CLI:
+
    ```bash
    npm i -g vercel
    ```
 
 2. Deploy:
+
    ```bash
    vercel
    ```
@@ -393,6 +413,7 @@ http://localhost:3000
 ## Rate Limiting
 
 GitStack implements rate limiting to prevent abuse:
+
 - 100 requests per 15 minutes per IP
 - Respects GitHub API rate limits
 - Implements exponential backoff for failed requests
@@ -447,7 +468,7 @@ For support, please open an issue in the GitHub repository or contact the mainta
 
 ## Screenshots
 
-*(Screenshots to be added)*
+_(Screenshots to be added)_
 
 ## 🚀 Quick Start Checklist
 
@@ -470,3 +491,4 @@ Before you start coding:
 **Happy coding with GitStack!**
 
 **⚠️ One More Time: NEVER commit `.env` to GitHub!**
+
