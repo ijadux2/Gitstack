@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitStack - Repository Management Tool</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="stylesheet" href="src/styles/enhanced.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-left">
+                    <a href="#" class="nav-brand">
+                        <i class="fab fa-github"></i>
+                        <span>GitStack</span>
+                        <span class="theme-badge">Mocha</span>
+                    </a>
+                    <div class="nav-search">
+                        <input type="text" id="search-input" placeholder="Search repositories...">
+                        <span class="search-hint">/</span>
+                    </div>
+                </div>
+                <div class="nav-right">
+                    <div id="auth-section" class="auth-section">
+                        <a href="/api/auth/github" class="btn btn-primary">
+                            <i class="fab fa-github"></i> Sign in with GitHub
+                        </a>
+                    </div>
+                    <div id="user-section" class="user-section hidden">
+                        <button class="btn btn-icon" title="Create new">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="btn btn-icon" id="notifications-btn" title="Notifications">
+                            <i class="far fa-bell"></i>
+                            <span id="notification-badge">0</span>
+                        </button>
+                        <button class="btn btn-icon" id="theme-toggle" title="Toggle animations">
+                            <i class="fas fa-sparkles"></i>
+                        </button>
+                        <div class="user-menu">
+                            <img id="user-avatar" src="" alt="User avatar" class="avatar">
+                            <div class="dropdown-menu hidden">
+                                <div class="dropdown-header">
+                                    <span id="user-name">Signed in as</span>
+                                    <strong id="user-username">@username</strong>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <a href="#profile" class="dropdown-item">Your profile</a>
+                                <a href="#repositories" class="dropdown-item">Your repositories</a>
+                                <a href="#settings" class="dropdown-item">Settings</a>
+                                <div class="dropdown-divider"></div>
+                                <a href="#" id="logout-btn" class="dropdown-item">Sign out</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Landing Page (Unauthenticated) -->
+            <section id="landing-page" class="page">
+                <div class="hero">
+                    <div class="hero-content">
+                        <h1>Built for developers</h1>
+                        <p>GitStack is a development platform inspired by the way you work. From open source to business, you can host and review code, manage projects, and build software alongside millions of other developers.</p>
+                        <div class="hero-cta">
+                            <a href="/api/auth/github" class="btn btn-large btn-primary">
+                                <i class="fab fa-github"></i> Sign up with GitHub
+                            </a>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <div class="code-window" id="hero-code-window">
+                            <div class="window-header">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                            <div class="window-content">
+                                <pre><code id="hero-code"><span class="comment">// Repository management made simple</span>
+<span class="keyword">const</span> <span class="variable">project</span> = <span class="keyword">new</span> <span class="function">Repository</span>({
+  <span class="variable">name</span>: <span class="string">"my-awesome-project"</span>,
+  <span class="variable">description</span>: <span class="string">"Building the future"</span>,
+  <span class="variable">visibility</span>: <span class="string">"public"</span>
+});
+
+<span class="variable">project</span>.<span class="function">commit</span>(<span class="string">"Initial commit"</span>);
+<span class="variable">project</span>.<span class="function">push</span>(<span class="string">"origin main"</span>);
+<span class="comment">// Success! 🚀</span></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="features">
+                    <div class="feature-card">
+                        <i class="fas fa-code-branch"></i>
+                        <h3>Repository Management</h3>
+                        <p>Create, fork, and manage repositories with an intuitive interface powered by GitHub API.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-bug"></i>
+                        <h3>Issue Tracking</h3>
+                        <p>Track bugs, feature requests, and tasks with powerful issue management and labeling.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-code-pull-request"></i>
+                        <h3>Pull Requests</h3>
+                        <p>Review code, discuss changes, and collaborate effectively with merge controls.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Collaboration</h3>
+                        <p>Work together with your team using comments, reviews, and assignments in real-time.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard (Authenticated) -->
+            <section id="dashboard-page" class="page hidden">
+                <div class="dashboard">
+                    <aside class="sidebar">
+                        <div class="sidebar-header">
+                            <h3>Top Repositories</h3>
+                            <button id="new-repo-btn" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus"></i> New
+                            </button>
+                        </div>
+                        <div id="repo-list" class="repo-list">
+                            <!-- Repositories will be loaded here -->
+                            <div class="loading">Loading repositories...</div>
+                        </div>
+                        <a href="#repositories" class="show-more">Show more</a>
+                    </aside>
+                    
+                    <div class="dashboard-content">
+                        <div class="welcome-banner">
+                            <h2>Welcome back, <span id="dashboard-username">Developer</span>!</h2>
+                            <p>Here's what's happening in your repositories.</p>
+                        </div>
+                        
+                        <div class="activity-feed">
+                            <h3>Recent Activity</h3>
+                            <div id="activity-list" class="activity-list">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No recent activity</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Repositories Page -->
+            <section id="repositories-page" class="page hidden">
+                <div class="page-header">
+                    <h1>Your Repositories</h1>
+                    <button id="create-repo-btn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> New Repository
+                    </button>
+                </div>
+                <div class="filters">
+                    <input type="text" id="repo-search" placeholder="Find a repository...">
+                    <select id="repo-type">
+                        <option value="">All</option>
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                    </select>
+                    <select id="repo-sort">
+                        <option value="updated">Last updated</option>
+                        <option value="name">Name</option>
+                        <option value="stars">Stars</option>
+                    </select>
+                </div>
+                <div id="repositories-list" class="repositories-list">
+                    <!-- Repository cards will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Repository Detail Page -->
+            <section id="repository-page" class="page hidden">
+                <div class="repo-header">
+                    <div class="repo-title">
+                        <i class="fas fa-book"></i>
+                        <h1>
+                            <a href="#" id="repo-owner" class="owner-link">owner</a>
+                            <span class="separator">/</span>
+                            <span id="repo-name">repository</span>
+                            <span id="repo-visibility" class="badge">Public</span>
+                        </h1>
+                    </div>
+                    <div class="repo-actions">
+                        <button class="btn btn-secondary">
+                            <i class="far fa-eye"></i> Unwatch
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-code-branch"></i> Fork
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="far fa-star"></i> Star
+                        </button>
+                    </div>
+                </div>
+                
+                <nav class="repo-nav">
+                    <a href="#" class="repo-nav-item active" data-tab="code">
+                        <i class="fas fa-code"></i> Code
+                    </a>
+                    <a href="#" class="repo-nav-item" data-tab="issues">
+                        <i class="fas fa-exclamation-circle"></i> Issues
+                        <span id="issues-count" class="count">0</span>
+                    </a>
+                    <a href="#" class="repo-nav-item" data-tab="pulls">
+                        <i class="fas fa-code-pull-request"></i> Pull requests
+                        <span id="pulls-count" class="count">0</span>
+                    </a>
+                    <a href="#" class="repo-nav-item" data-tab="actions">
+                        <i class="fas fa-play-circle"></i> Actions
+                    </a>
+                    <a href="#" class="repo-nav-item" data-tab="projects">
+                        <i class="fas fa-table-columns"></i> Projects
+                    </a>
+                    <a href="#" class="repo-nav-item" data-tab="wiki">
+                        <i class="fas fa-book"></i> Wiki
+                    </a>
+                    <a href="#" class="repo-nav-item" data-tab="security">
+                        <i class="fas fa-shield-alt"></i> Security
+                    </a>
+                    <a href="#" class="repo-nav-item" data-tab="insights">
+                        <i class="fas fa-chart-line"></i> Insights
+                    </a>
+                    <a href="#" class="repo-nav-item" data-tab="settings">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </nav>
+
+                <div class="repo-content">
+                    <!-- Code Tab -->
+                    <div id="code-tab" class="tab-content active">
+                        <div class="repo-main">
+                            <div class="file-browser">
+                                <div class="branch-selector">
+                                    <button class="btn btn-secondary">
+                                        <i class="fas fa-code-branch"></i>
+                                        <span id="current-branch">main</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+                                <div id="file-list" class="file-list">
+                                    <!-- Files will be loaded here -->
+                                </div>
+                            </div>
+                            <aside class="repo-sidebar">
+                                <div class="about-section">
+                                    <h3>About</h3>
+                                    <p id="repo-description">No description provided.</p>
+                                    <div class="repo-stats">
+                                        <div class="stat">
+                                            <i class="fas fa-star"></i>
+                                            <span id="repo-stars">0</span> stars
+                                        </div>
+                                        <div class="stat">
+                                            <i class="fas fa-eye"></i>
+                                            <span id="repo-watchers">0</span> watching
+                                        </div>
+                                        <div class="stat">
+                                            <i class="fas fa-code-branch"></i>
+                                            <span id="repo-forks">0</span> forks
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="languages-section">
+                                    <h3>Languages</h3>
+                                    <div id="languages-list" class="languages-list">
+                                        <!-- Languages will be loaded here -->
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
+                    </div>
+
+                    <!-- Issues Tab -->
+                    <div id="issues-tab" class="tab-content hidden">
+                        <div class="issues-header">
+                            <div class="filters">
+                                <div class="filter-group">
+                                    <button class="btn btn-secondary active">Open</button>
+                                    <button class="btn btn-secondary">Closed</button>
+                                    <button class="btn btn-secondary">All</button>
+                                </div>
+                                <input type="text" id="issue-search" placeholder="Search all issues...">
+                            </div>
+                            <button id="new-issue-btn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> New issue
+                            </button>
+                        </div>
+                        <div id="issues-list" class="issues-list">
+                            <!-- Issues will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Pull Requests Tab -->
+                    <div id="pulls-tab" class="tab-content hidden">
+                        <div class="pulls-header">
+                            <div class="filters">
+                                <div class="filter-group">
+                                    <button class="btn btn-secondary active">Open</button>
+                                    <button class="btn btn-secondary">Closed</button>
+                                    <button class="btn btn-secondary">Merged</button>
+                                </div>
+                                <input type="text" id="pull-search" placeholder="Search pull requests...">
+                            </div>
+                            <button id="new-pull-btn" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> New pull request
+                            </button>
+                        </div>
+                        <div id="pulls-list" class="pulls-list">
+                            <!-- Pull requests will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Page -->
+            <section id="profile-page" class="page hidden">
+                <div class="profile">
+                    <aside class="profile-sidebar">
+                        <img id="profile-avatar" src="" alt="Profile" class="profile-avatar">
+                        <h1 id="profile-name">Name</h1>
+                        <h2 id="profile-username">@username</h2>
+                        <p id="profile-bio">Bio</p>
+                        <button class="btn btn-secondary btn-block">Edit profile</button>
+                        <div class="profile-stats">
+                            <div class="stat">
+                                <i class="fas fa-users"></i>
+                                <span id="profile-followers">0</span> followers
+                            </div>
+                            <div class="stat">
+                                <span id="profile-following">0</span> following
+                            </div>
+                        </div>
+                    </aside>
+                    <div class="profile-content">
+                        <nav class="profile-nav">
+                            <a href="#" class="active">Overview</a>
+                            <a href="#">Repositories <span id="profile-repo-count" class="count">0</span></a>
+                            <a href="#">Projects</a>
+                            <a href="#">Packages</a>
+                            <a href="#">Stars</a>
+                        </nav>
+                        <div class="profile-overview">
+                            <h3>Popular repositories</h3>
+                            <div id="profile-repos" class="profile-repos">
+                                <!-- Popular repos will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Create Repository Modal -->
+        <div id="create-repo-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create a new repository</h2>
+                    <button class="btn btn-icon close-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-repo-form">
+                        <div class="form-group">
+                            <label>Repository name <span class="required">*</span></label>
+                            <input type="text" id="repo-name-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description <span class="hint">(optional)</span></label>
+                            <input type="text" id="repo-desc-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Visibility</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="visibility" value="public" checked>
+                                    <i class="fas fa-globe"></i>
+                                    <div>
+                                        <strong>Public</strong>
+                                        <span>Anyone on the internet can see this repository</span>
+                                    </div>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="visibility" value="private">
+                                    <i class="fas fa-lock"></i>
+                                    <div>
+                                        <strong>Private</strong>
+                                        <span>You choose who can see and commit to this repository</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group checkbox">
+                            <label>
+                                <input type="checkbox" id="init-readme">
+                                Initialize this repository with a README
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" form="create-repo-form" class="btn btn-primary">Create repository</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Issue Modal -->
+        <div id="create-issue-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>New Issue</h2>
+                    <button class="btn btn-icon close-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-issue-form">
+                        <div class="form-group">
+                            <label>Title <span class="required">*</span></label>
+                            <input type="text" id="issue-title-input" placeholder="Title" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="issue-desc-input" rows="8" placeholder="Leave a comment"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Labels</label>
+                            <select id="issue-labels" multiple>
+                                <option value="bug">bug</option>
+                                <option value="enhancement">enhancement</option>
+                                <option value="documentation">documentation</option>
+                                <option value="help wanted">help wanted</option>
+                                <option value="good first issue">good first issue</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary close-modal">Cancel</button>
+                    <button type="submit" form="create-issue-form" class="btn btn-primary">Submit new issue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <script src="src/components/enhanced-features.js"></script>
+    <script src="src/app.js"></script>
+</body>
+</html>
