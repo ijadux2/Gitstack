@@ -13,6 +13,9 @@ A full-stack web application that replicates essential features of GitHub, allow
 
 🚧 Work in Progress
 
+I'm making a native-linux app for this in lua
+in future i will replace this web based application(browser) to lua but still there on web.
+
 ## ⚠️ CRITICAL: Security Notice for Contributors
 
 **NEVER commit your `.env` file to GitHub!** The `.env` file contains sensitive credentials (GitHub OAuth secrets, database passwords) that should remain private.
