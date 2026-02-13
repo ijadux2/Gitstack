@@ -11,7 +11,7 @@ A full-stack web application that replicates essential features of GitHub, allow
 
 ## in work
 
-if something would not work sorry for that , **working**
+🚧 Work in Progress
 
 ## ⚠️ CRITICAL: Security Notice for Contributors
 
@@ -491,4 +491,3 @@ Before you start coding:
 **Happy coding with GitStack!**
 
 **⚠️ One More Time: NEVER commit `.env` to GitHub!**
-

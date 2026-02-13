@@ -15,7 +15,7 @@
     "issues",
     "pull-requests"
   ],
-  "author": "",
+  "author": "ijadux2",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
@@ -37,3 +37,4 @@
     "jest": "^29.7.0"
   }
 }
+
