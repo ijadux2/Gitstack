@@ -28,6 +28,10 @@
     --ctp-mantle: #181825;
     --ctp-crust: #11111b;
 
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-mono: 'Fira Code', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+
     /* Theme Application */
     --color-primary: var(--ctp-mauve);
     --color-primary-hover: var(--ctp-pink);
@@ -1987,4 +1991,408 @@ a:hover {
 
 .animations-disabled .cursor-glow {
     display: none !important;
+}
+
+/* ===== File Tree Viewer ===== */
+.file-tree {
+    padding: 0;
+}
+
+.file-tree-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    margin: 2px 0;
+    transition: background 0.15s ease;
+}
+
+.file-tree-item:hover {
+    background: var(--ctp-surface0);
+}
+
+.file-tree-item.dir {
+    font-weight: 500;
+}
+
+.file-tree-item .file-icon {
+    width: 24px;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-tree-item .file-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.file-tree-item .file-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-tree-item .file-size {
+    color: var(--ctp-overlay0);
+    font-size: 0.85em;
+    font-family: var(--font-mono);
+}
+
+.file-tree-item .view-file-btn {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.file-tree-item:hover .view-file-btn {
+    opacity: 1;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 0;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+
+.breadcrumb-item {
+    cursor: pointer;
+    color: var(--ctp-text);
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+}
+
+.breadcrumb-item:hover {
+    background: var(--ctp-surface0);
+}
+
+.breadcrumb-separator {
+    color: var(--ctp-overlay0);
+}
+
+/* README Container */
+.readme-container {
+    background: var(--ctp-surface0);
+    border-radius: 8px;
+    padding: 32px 48px;
+    margin-bottom: 16px;
+    border: 1px solid var(--ctp-surface1);
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.readme-content {
+    max-width: 900px;
+    margin: 0 auto;
+    overflow-wrap: break-word;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ctp-text);
+}
+
+.readme-content h1, .readme-content h2, .readme-content h3, 
+.readme-content h4, .readme-content h5, .readme-content h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: var(--ctp-text);
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.readme-content h1 { 
+    font-size: 2em; 
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--ctp-surface1);
+}
+.readme-content h2 { 
+    font-size: 1.5em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--ctp-surface1);
+}
+.readme-content h3 { font-size: 1.25em; }
+.readme-content h4 { font-size: 1em; }
+
+.readme-content p {
+    margin: 0 0 16px 0;
+}
+
+.readme-content code {
+    background: var(--ctp-crust);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.85em;
+}
+
+.readme-content pre {
+    background: var(--ctp-crust);
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+.readme-content pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.9em;
+    line-height: 1.45;
+}
+
+.readme-content ul, .readme-content ol {
+    padding-left: 2em;
+    margin: 0 0 16px 0;
+}
+
+.readme-content li {
+    margin-bottom: 4px;
+}
+
+.readme-content li + li {
+    margin-top: 4px;
+}
+
+.readme-content a {
+    color: var(--ctp-blue);
+    text-decoration: none;
+}
+
+.readme-content a:hover {
+    text-decoration: underline;
+}
+
+.readme-content img {
+    border-radius: 8px;
+    max-width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.readme-content blockquote {
+    margin: 1em 0;
+    padding: 0 1em;
+    border-left: 4px solid var(--ctp-mauve);
+    color: var(--ctp-overlay0);
+}
+
+.readme-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+.readme-content th, .readme-content td {
+    padding: 8px 12px;
+    border: 1px solid var(--ctp-surface1);
+}
+
+.readme-content th {
+    background: var(--ctp-crust);
+    font-weight: 600;
+}
+
+.readme-content hr {
+    border: none;
+    border-top: 1px solid var(--ctp-surface1);
+    margin: 1.5em 0;
+}
+
+/* File Viewer Modal */
+.file-viewer-modal {
+    max-width: 90vw;
+    width: 900px;
+}
+
+.file-viewer-content {
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-viewer-content .modal-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-viewer-content .modal-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 1em;
+    margin: 0;
+}
+
+.file-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.file-viewer-body {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+    background: var(--ctp-crust);
+    border-radius: 0 0 8px 8px;
+}
+
+.file-viewer-body pre {
+    margin: 0;
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.file-viewer-body code {
+    font-family: var(--font-mono);
+}
+
+.image-preview {
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-preview img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 8px;
+}
+
+.markdown-preview {
+    padding: 32px 48px;
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ctp-text);
+}
+
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3, 
+.markdown-preview h4, .markdown-preview h5, .markdown-preview h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: var(--ctp-text);
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.markdown-preview h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--ctp-surface1); }
+.markdown-preview h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--ctp-surface1); }
+.markdown-preview h3 { font-size: 1.25em; }
+
+.markdown-preview p { margin: 0 0 16px 0; }
+
+.markdown-preview code {
+    background: var(--ctp-crust);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.85em;
+}
+
+.markdown-preview pre {
+    background: var(--ctp-crust);
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+.markdown-preview pre code { background: none; padding: 0; }
+
+.markdown-preview ul, .markdown-preview ol {
+    padding-left: 2em;
+    margin: 0 0 16px 0;
+}
+
+.markdown-preview li { margin-bottom: 4px; }
+
+.markdown-preview a {
+    color: var(--ctp-blue);
+    text-decoration: none;
+}
+
+.markdown-preview a:hover { text-decoration: underline; }
+
+.markdown-preview img {
+    border-radius: 8px;
+    max-width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.markdown-preview blockquote {
+    margin: 1em 0;
+    padding: 0 1em;
+    border-left: 4px solid var(--ctp-mauve);
+    color: var(--ctp-overlay0);
+}
+
+.markdown-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+.markdown-preview th, .markdown-preview td {
+    padding: 8px 12px;
+    border: 1px solid var(--ctp-surface1);
+}
+
+.markdown-preview th {
+    background: var(--ctp-crust);
+    font-weight: 600;
+}
+
+.file-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    gap: 12px;
+    color: var(--ctp-overlay0);
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--ctp-surface1);
+    border-top-color: var(--ctp-mauve);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* File Tree Loading */
+.file-tree-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    gap: 12px;
+    color: var(--ctp-overlay0);
 }

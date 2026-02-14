@@ -56,4 +56,20 @@ router.get('/search', isAuthenticated, async (req, res) => {
   }
 });
 
+// Get GitHub notifications
+router.get('/notifications', isAuthenticated, async (req, res) => {
+  try {
+    const response = await axios.get('https://api.github.com/notifications', {
+      headers: {
+        Authorization: `token ${req.user.githubToken}`,
+        Accept: 'application/vnd.github.v3+json'
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching notifications:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
 module.exports = router;

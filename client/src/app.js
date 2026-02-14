@@ -13,10 +13,9 @@ class GitStackApp {
 
     init() {
         this.bindEvents();
-        this.checkAuth();
         this.initAnimations();
         this.initCursorGlow();
-        this.initNotifications();
+        this.checkAuth();
     }
 
     // Settings Management
@@ -39,25 +38,28 @@ class GitStackApp {
 
     // Notifications System
     initNotifications() {
+        // Only start notifications after user is authenticated
         if (this.currentUser) {
             this.checkGitHubNotifications();
-            setInterval(() => this.checkGitHubNotifications(), 300000);
+            // Store interval ID so it can be cleared later
+            this.notificationsInterval = setInterval(() => this.checkGitHubNotifications(), 300000);
         }
     }
 
     async checkGitHubNotifications() {
         if (!this.currentUser) return;
         try {
-            const response = await fetch('https://api.github.com/notifications', {
-                headers: {
-                    'Authorization': `token ${this.currentUser.githubToken}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
+            // Use server endpoint instead of direct GitHub API call
+            const response = await fetch('/api/user/notifications');
             if (response.ok) {
                 const notifications = await response.json();
                 this.updateNotificationBadge(notifications.length);
                 this.notifications = notifications;
+            } else if (response.status === 401) {
+                // Authentication failed, stop checking
+                if (this.notificationsInterval) {
+                    clearInterval(this.notificationsInterval);
+                }
             }
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
@@ -242,6 +244,9 @@ class GitStackApp {
         document.getElementById('create-repo-form')?.addEventListener('submit', (e) => this.createRepository(e));
         document.getElementById('create-issue-form')?.addEventListener('submit', (e) => this.createIssue(e));
 
+        // Repository source filter
+        document.getElementById('repo-source')?.addEventListener('change', () => this.loadRepositories());
+
         // Repository navigation tabs
         document.querySelectorAll('.repo-nav-item').forEach(tab => {
             tab.addEventListener('click', (e) => {
@@ -297,6 +302,8 @@ class GitStackApp {
             if (data.authenticated) {
                 this.currentUser = data.user;
                 this.showAuthenticatedUI();
+                // Initialize notifications after authentication is confirmed
+                this.initNotifications();
                 // Check for hash route or default to dashboard
                 const hash = window.location.hash.replace('#', '') || 'dashboard';
                 this.navigate(hash);
@@ -319,6 +326,11 @@ class GitStackApp {
             const response = await fetch('/api/auth/logout');
             if (response.ok) {
                 this.currentUser = null;
+                // Clear notifications interval on logout
+                if (this.notificationsInterval) {
+                    clearInterval(this.notificationsInterval);
+                    this.notificationsInterval = null;
+                }
                 this.showUnauthenticatedUI();
                 this.navigate('landing');
                 this.showToast('Successfully logged out', 'success');
@@ -445,6 +457,8 @@ class GitStackApp {
         const listContainer = document.getElementById('repositories-list');
         if (!listContainer) return;
         
+        const repoSource = document.getElementById('repo-source')?.value || 'github';
+        
         // Show skeleton loading state
         listContainer.innerHTML = Array(5).fill(0).map((_, i) => `
             <div class="repo-card skeleton-card" style="animation-delay: ${i * 0.1}s">
@@ -458,52 +472,65 @@ class GitStackApp {
         `).join('');
         
         try {
-            const response = await fetch('/api/repos?sort=updated&per_page=50');
-            const repos = await response.json();
+            let repos;
+            if (repoSource === 'local') {
+                const response = await fetch('/api/local');
+                repos = await response.json();
+            } else {
+                const response = await fetch('/api/repos?sort=updated&per_page=50');
+                repos = await response.json();
+            }
             
             if (repos.length === 0) {
                 listContainer.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <p>No repositories found</p>
-                        <button class="btn btn-primary" onclick="window.gitstack.showModal('create-repo-modal')">
-                            Create your first repository
-                        </button>
+                        ${repoSource === 'local' ? `
+                            <p style="margin-top: 10px; font-size: 0.9em; color: var(--ctp-overlay0);">
+                                Add git repos to the /repos folder or clone them.
+                            </p>
+                        ` : `
+                            <button class="btn btn-primary" onclick="window.gitstack.showModal('create-repo-modal')">
+                                Create your first repository
+                            </button>
+                        `}
                     </div>
                 `;
                 return;
             }
             
-            listContainer.innerHTML = repos.map((repo, index) => `
+            listContainer.innerHTML = repos.map((repo, index) => {
+                const isLocal = repo.isLocal || repoSource === 'local';
+                const name = repo.name;
+                const owner = repo.owner?.login || 'local';
+                const description = repo.description || 'No description';
+                const updated = repo.updated_at ? this.formatDate(repo.updated_at) : (repo.lastCommit ? this.formatDate(new Date(repo.lastCommit.timestamp * 1000)) : '');
+                
+                return `
                 <div class="repo-card" style="animation: fadeInUp 0.4s ease ${index * 0.1}s backwards;">
                     <div class="repo-card-header">
                         <div class="repo-card-title">
-                            <a href="#repo/${repo.owner.login}/${repo.name}" data-owner="${repo.owner.login}" data-repo="${repo.name}">
-                                ${repo.name}
+                            <a href="#repo/${owner}/${name}" data-owner="${owner}" data-repo="${name}" data-source="${repoSource}">
+                                ${name}
                             </a>
-                            <span class="badge">${repo.private ? 'Private' : 'Public'}</span>
+                            <span class="badge">${isLocal ? 'Local' : (repo.private ? 'Private' : 'Public')}</span>
                         </div>
                     </div>
-                    <p class="repo-card-description">${repo.description || 'No description provided'}</p>
+                    <p class="repo-card-description">${description}</p>
                     <div class="repo-card-meta">
-                        ${repo.language ? `
-                            <span>
-                                <span class="language-color" style="background-color: ${this.getLanguageColor(repo.language)}"></span>
-                                ${repo.language}
-                            </span>
-                        ` : ''}
-                        <span><i class="far fa-star"></i> ${repo.stargazers_count}</span>
-                        <span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span>
-                        <span>Updated ${this.formatDate(repo.updated_at)}</span>
+                        <span><i class="fas fa-code-branch"></i> ${repo.branch || 'main'}</span>
+                        ${repo.lastCommit ? `<span>Updated ${updated}</span>` : ''}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
             
             // Add click handlers with hover effects
             listContainer.querySelectorAll('a[data-owner]').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    this.loadRepository(link.dataset.owner, link.dataset.repo);
+                    const source = link.dataset.source || 'github';
+                    this.loadRepository(link.dataset.owner, link.dataset.repo, source);
                 });
             });
         } catch (error) {
@@ -521,32 +548,35 @@ class GitStackApp {
     }
 
     // Repository Detail Page
-    async loadRepository(owner, name) {
-        this.currentRepo = { owner, name };
+    async loadRepository(owner, name, source = 'github') {
+        this.currentRepo = { owner, name, source };
         this.navigate('repository');
         
         try {
             // Load repository details
-            const response = await fetch(`/api/repos/${owner}/${name}`);
+            const apiPath = source === 'local' ? `/api/local/${name}` : `/api/repos/${owner}/${name}`;
+            const response = await fetch(apiPath);
             const repo = await response.json();
             
             // Update header
             document.getElementById('repo-owner').textContent = owner;
             document.getElementById('repo-name').textContent = name;
-            document.getElementById('repo-visibility').textContent = repo.private ? 'Private' : 'Public';
+            document.getElementById('repo-visibility').textContent = repo.isLocal ? 'Local' : (repo.private ? 'Private' : 'Public');
             document.getElementById('repo-description').textContent = repo.description || 'No description provided';
-            document.getElementById('repo-stars').textContent = repo.stargazers_count;
-            document.getElementById('repo-watchers').textContent = repo.watchers_count;
-            document.getElementById('repo-forks').textContent = repo.forks_count;
+            document.getElementById('repo-stars').textContent = repo.stargazers_count || 0;
+            document.getElementById('repo-watchers').textContent = repo.watchers_count || 0;
+            document.getElementById('repo-forks').textContent = repo.forks_count || 0;
             
             // Load file list
-            this.loadFileList(owner, name);
+            this.loadFileList(owner, name, '', source);
             
             // Load issues count
-            this.loadIssuesCount(owner, name);
+            if (source !== 'local') {
+                this.loadIssuesCount(owner, name);
             
             // Load PRs count
             this.loadPRsCount(owner, name);
+            }
             
         } catch (error) {
             console.error('Failed to load repository:', error);
@@ -554,32 +584,313 @@ class GitStackApp {
         }
     }
 
-    async loadFileList(owner, name, path = '') {
-        // Use the enhanced file tree viewer
-        if (typeof this.loadFileTree === 'function') {
-            this.loadFileTree(owner, name, path);
-        } else {
-            // Fallback to basic file list
-            const fileList = document.getElementById('file-list');
-            if (!fileList) return;
+    async loadFileList(owner, name, path = '', source = 'github') {
+        const fileList = document.getElementById('file-list');
+        if (!fileList) return;
+        
+        this.currentRepo = { owner, name, source };
+        
+        fileList.innerHTML = `
+            <div class="file-tree-loading">
+                <div class="loading-spinner"></div>
+                <span>Loading files...</span>
+            </div>
+        `;
+        
+        try {
+            const apiPath = source === 'local' 
+                ? `/api/local/${name}/contents/${path}` 
+                : `/api/repos/${owner}/${name}/contents/${path}`;
+            const response = await fetch(apiPath);
+            const files = await response.json();
             
-            try {
-                const response = await fetch(`/api/repos/${owner}/${name}/contents/${path}`);
-                const files = await response.json();
-                
-                fileList.innerHTML = files.map(file => `
-                    <div class="file-list-item" data-type="${file.type}" data-path="${file.path}">
-                        <i class="fas ${file.type === 'dir' ? 'fa-folder' : 'fa-file'}"></i>
-                        <span class="file-name">${file.name}</span>
-                        <span class="commit-message">${file.type === 'file' ? this.formatFileSize(file.size) : ''}</span>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Failed to load files:', error);
-                fileList.innerHTML = '<div class="empty-state">Failed to load files</div>';
+            if (!Array.isArray(files)) {
+                this.viewFile(owner, name, path, files, source);
+                return;
             }
+            
+            files.sort((a, b) => {
+                if (a.type === b.type) return a.name.localeCompare(b.name);
+                return a.type === 'dir' ? -1 : 1;
+            });
+            
+            const breadcrumb = this.buildBreadcrumb(owner, name, path);
+            
+            const readmeFile = files.find(f => f.name.toLowerCase().startsWith('readme'));
+            let readmeContent = '';
+            if (readmeFile && path === '') {
+                try {
+                    const readmeApi = source === 'local'
+                        ? `/api/local/${name}/contents/${readmeFile.path}`
+                        : `/api/repos/${owner}/${name}/contents/${readmeFile.path}`;
+                    const readmeResp = await fetch(readmeApi);
+                    const readmeData = await readmeResp.json();
+                    if (readmeData.content) {
+                        readmeContent = this.renderReadme(atob(readmeData.content));
+                    }
+                } catch (e) {}
+            }
+            
+            fileList.innerHTML = `
+                ${breadcrumb}
+                ${readmeContent ? `<div class="readme-container">${readmeContent}</div>` : ''}
+                <div class="file-tree">
+                    ${files.map((file, index) => `
+                        <div class="file-tree-item ${file.type}" 
+                             data-type="${file.type}" 
+                             data-path="${file.path}"
+                             data-source="${source}"
+                             style="animation: fadeInUp 0.3s ease ${index * 0.05}s backwards">
+                            <div class="file-icon">
+                                ${this.getFileIcon(file.name, file.type)}
+                            </div>
+                            <div class="file-info">
+                                <span class="file-name">${file.name}</span>
+                                ${file.type === 'file' ? `<span class="file-size">${this.formatFileSize(file.size)}</span>` : ''}
+                            </div>
+                            ${file.type === 'file' ? `
+                                <button class="btn btn-icon btn-sm view-file-btn" title="View file">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            fileList.querySelectorAll('.file-tree-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('.view-file-btn')) {
+                        e.stopPropagation();
+                        this.viewFile(owner, name, item.dataset.path, null, source);
+                    } else if (item.dataset.type === 'dir') {
+                        this.loadFileList(owner, name, item.dataset.path, source);
+                    } else {
+                        this.viewFile(owner, name, item.dataset.path, null, source);
+                    }
+                });
+            });
+            
+            fileList.querySelectorAll('.breadcrumb-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    this.loadFileList(owner, name, item.dataset.path, source);
+                });
+            });
+            
+        } catch (error) {
+            console.error('Failed to load files:', error);
+            fileList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle" style="color: var(--ctp-red);"></i>
+                    <p>Failed to load files</p>
+                    <button class="btn btn-secondary" onclick="window.gitstack.loadFileList('${owner}', '${name}', '${path}', '${source}')">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
         }
+    }
+
+    buildBreadcrumb(owner, repo, path) {
+        const parts = path.split('/').filter(p => p);
+        let html = `<div class="breadcrumb">
+            <span class="breadcrumb-item" data-path="">
+                <i class="fas fa-folder"></i> ${repo}
+            </span>`;
+        
+        let currentPath = '';
+        parts.forEach((part, index) => {
+            currentPath += (currentPath ? '/' : '') + part;
+            html += `
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item" data-path="${currentPath}">${part}</span>`;
+        });
+        
+        return html + '</div>';
+    }
+
+    getFileIcon(filename, type) {
+        if (type === 'dir') {
+            return '<i class="fas fa-folder" style="color: var(--ctp-yellow);"></i>';
+        }
+        
+        const ext = filename.split('.').pop().toLowerCase();
+        const icons = {
+            js: '<i class="fab fa-js" style="color: #f7df1e;"></i>',
+            jsx: '<i class="fab fa-react" style="color: #61dafb;"></i>',
+            ts: '<i class="fab fa-js" style="color: #3178c6;"></i>',
+            tsx: '<i class="fab fa-react" style="color: #61dafb;"></i>',
+            html: '<i class="fab fa-html5" style="color: #e34c26;"></i>',
+            css: '<i class="fab fa-css3-alt" style="color: #264de4;"></i>',
+            scss: '<i class="fab fa-sass" style="color: #cf649a;"></i>',
+            json: '<i class="fas fa-code" style="color: var(--ctp-teal);"></i>',
+            md: '<i class="fas fa-file-alt" style="color: var(--ctp-text);"></i>',
+            py: '<i class="fab fa-python" style="color: #3572A5;"></i>',
+            java: '<i class="fab fa-java" style="color: #b07219;"></i>',
+            php: '<i class="fab fa-php" style="color: #777bb4;"></i>',
+            rb: '<i class="fas fa-gem" style="color: #cc342d;"></i>',
+            go: '<i class="fas fa-code" style="color: #00add8;"></i>',
+            rs: '<i class="fas fa-cog" style="color: #dea584;"></i>',
+            cpp: '<i class="fas fa-code" style="color: #f34b7d;"></i>',
+            c: '<i class="fas fa-code" style="color: #555555;"></i>',
+            sql: '<i class="fas fa-database" style="color: var(--ctp-green);"></i>',
+            yml: '<i class="fas fa-cog" style="color: var(--ctp-teal);"></i>',
+            yaml: '<i class="fas fa-cog" style="color: var(--ctp-teal);"></i>',
+            dockerfile: '<i class="fab fa-docker" style="color: #2496ed;"></i>',
+            env: '<i class="fas fa-key" style="color: #ecd53f;"></i>',
+            gitignore: '<i class="fab fa-git-alt" style="color: #f05032;"></i>',
+            txt: '<i class="fas fa-file-alt" style="color: var(--ctp-overlay0);"></i>',
+            sh: '<i class="fas fa-terminal" style="color: var(--ctp-green);"></i>',
+            bash: '<i class="fas fa-terminal" style="color: var(--ctp-green);"></i>'
+        };
+        
+        return icons[ext] || '<i class="fas fa-file" style="color: var(--ctp-overlay0);"></i>';
+    }
+
+    renderReadme(content) {
+        let html = content;
+        
+        html = html
+            .replace(/^###### (.*$)/gim, '<h6>$1</h6>')
+            .replace(/^##### (.*$)/gim, '<h5>$1</h5>')
+            .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>');
+        
+        html = html
+            .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+        
+        html = html
+            .replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        html = html
+            .replace(/^\*\*\* (.*$)/gim, '<li style="list-style: none;"><strong>$1</strong></li>')
+            .replace(/^\*\* (.*$)/gim, '<li style="list-style: none;">$1</li>')
+            .replace(/^\- \[x\] (.*$)/gim, '<li><input type="checkbox" checked disabled> $1</li>')
+            .replace(/^\- \[ \] (.*$)/gim, '<li><input type="checkbox" disabled> $1</li>')
+            .replace(/^\- (.*$)/gim, '<li>$1</li>')
+            .replace(/^\* (.*$)/gim, '<li>$1</li>')
+            .replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+        
+        html = html
+            .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+            .replace(/^---$/gim, '<hr>')
+            .replace(/^___$/gim, '<hr>');
+        
+        html = html
+            .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/~~(.*?)~~/g, '<del>$1</del>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        html = html
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+            .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
+        
+        html = html
+            .replace(/\|(.+)\|/g, (match) => {
+                const cells = match.split('|').filter(c => c.trim());
+                if (cells.every(c => c.trim().match(/^-+$/))) {
+                    return '';
+                }
+                const isHeader = !match.includes('---');
+                const tag = isHeader ? 'th' : 'td';
+                return '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+            });
+        
+        html = html.replace(/(<tr>.*<\/tr>)+/g, '<table>$&</table>');
+        
+        html = html
+            .split('\n\n')
+            .map(block => {
+                block = block.trim();
+                if (!block) return '';
+                if (block.match(/^<(h[1-6]|pre|blockquote|hr|table|ul|ol)/)) {
+                    return block;
+                }
+                return `<p>${block.replace(/\n/g, '<br>')}</p>`;
+            })
+            .join('\n');
+        
+        return `<div class="readme-content">${html}</div>`;
+    }
+
+    async viewFile(owner, repo, path, fileData = null, source = 'github') {
+        const modal = document.createElement('div');
+        modal.className = 'modal file-viewer-modal';
+        
+        modal.innerHTML = `
+            <div class="modal-content file-viewer-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-file-code"></i> ${path.split('/').pop()}</h3>
+                    <div class="file-actions">
+                        <button class="btn btn-icon" id="copy-file-btn" title="Copy content">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="btn btn-icon close-modal" title="Close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body file-viewer-body">
+                    <div class="file-loading">
+                        <div class="loading-spinner"></div>
+                        <span>Loading file...</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        modal.querySelector('.close-modal').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        
+        try {
+            let content;
+            
+            if (fileData && fileData.content) {
+                content = atob(fileData.content);
+            } else {
+                const apiPath = source === 'local'
+                    ? `/api/local/${repo}/contents/${path}`
+                    : `/api/repos/${owner}/${repo}/contents/${path}`;
+                const resp = await fetch(apiPath);
+                const data = await resp.json();
+                content = data.content ? atob(data.content) : (data || '');
+            }
+            
+            const ext = path.split('.').pop().toLowerCase();
+            const isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext);
+            const isMarkdown = ['md', 'markdown'].includes(ext);
+            
+            let contentHtml;
+            if (isImage) {
+                contentHtml = `<div class="image-preview"><img src="data:image/${ext};base64,${btoa(content)}" alt="${path}"></div>`;
+            } else if (isMarkdown) {
+                contentHtml = `<div class="markdown-preview">${this.renderReadme(content)}</div>`;
+            } else {
+                contentHtml = `<pre><code>${this.escapeHtml(content)}</code></pre>`;
+            }
+            
+            modal.querySelector('.file-viewer-body').innerHTML = contentHtml;
+            
+            modal.querySelector('#copy-file-btn')?.addEventListener('click', () => {
+                navigator.clipboard.writeText(content);
+                this.showToast('Copied to clipboard', 'success');
+            });
+            
+        } catch (error) {
+            console.error('Failed to load file:', error);
+            modal.querySelector('.file-viewer-body').innerHTML = '<div class="empty-state">Failed to load file</div>';
+        }
+    }
+
+    escapeHtml(text) {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, m => map[m]);
     }
 
     async loadIssuesCount(owner, name) {

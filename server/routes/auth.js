@@ -9,16 +9,17 @@ router.get('/github',
 
 // GitHub OAuth callback
 router.get('/github/callback',
-  passport.authenticate('github', { failureRedirect: 'http://localhost:3000/#landing' }),
+  passport.authenticate('github', { failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:2020'}/#landing` }),
   (req, res) => {
     // Successful authentication - redirect to frontend dashboard
-    res.redirect('http://localhost:3000/#dashboard');
+    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:2020'}/#dashboard`);
   }
 );
 
 // Get current user
 router.get('/me', (req, res) => {
   if (req.isAuthenticated()) {
+    // Only return non-sensitive user data
     res.json({
       authenticated: true,
       user: {
@@ -28,6 +29,7 @@ router.get('/me', (req, res) => {
         email: req.user.email,
         avatar: req.user.avatar,
         profileUrl: req.user.profileUrl
+        // Note: githubToken is intentionally NOT included
       }
     });
   } else {

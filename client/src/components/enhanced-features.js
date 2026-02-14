@@ -39,21 +39,17 @@ class GitStackApp {
 
   // Notifications System
   initNotifications() {
-    this.checkGitHubNotifications();
-    // Check every 5 minutes
-    setInterval(() => this.checkGitHubNotifications(), 300000);
+    if (this.currentUser) {
+      this.checkGitHubNotifications();
+      this.notificationsInterval = setInterval(() => this.checkGitHubNotifications(), 300000);
+    }
   }
 
   async checkGitHubNotifications() {
     if (!this.currentUser) return;
 
     try {
-      const response = await fetch("https://api.github.com/notifications", {
-        headers: {
-          Authorization: `token ${this.currentUser.githubToken}`,
-          Accept: "application/vnd.github.v3+json",
-        },
-      });
+      const response = await fetch("/api/user/notifications");
 
       if (response.ok) {
         const notifications = await response.json();

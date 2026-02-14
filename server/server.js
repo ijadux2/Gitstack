@@ -26,7 +26,7 @@ app.use("/api/", limiter);
 // CORS configuration
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "http://localhost:2020",
     credentials: true,
   }),
 );
@@ -68,6 +68,7 @@ app.use("/api/repos", require("./routes/repos"));
 app.use("/api/issues", require("./routes/issues"));
 app.use("/api/pulls", require("./routes/pulls"));
 app.use("/api/user", require("./routes/user"));
+app.use("/api/local", require("./routes/localRepos"));
 
 // Serve static files from client directory
 app.use(express.static(path.join(__dirname, "../client")));
@@ -86,7 +87,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 2020;
 app.listen(PORT, () => {
   console.log(`GitStack server running on port ${PORT}`);
 });
